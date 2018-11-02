@@ -1,0 +1,35 @@
+@NonCPS
+def compile(type,mvnHome){
+    if(type.equals("fast")){
+        sh "'${mvnHome}/bin/mvn' clean install -DskipTests=true -Dgwt.compiler.skip=true -fn -Denforcer.skip=true"   
+    }else if(type.equals("full")){
+        sh "'${mvnHome}/bin/mvn' clean install -DskipTests=true"   
+    }
+}
+
+def stages = [
+    "errai":"fast",
+    "droolsjbpm-build-bootstrap":"fast",
+    "appformer":"fast",
+    "drools":"fast",
+    "jbpm":"fast",
+    "optaplanner":"fast",
+    "droolsjbpm-integration":"fast",
+    "kie-wb-common":"fast",
+    "jbpm-wb":"fast",
+    "optaplanner-wb":"fast",
+    "kie-wb-distributions":"full"
+]
+
+node {
+   def mvnHome
+   stage('Preparation') { // for display purposes
+      mvnHome = tool 'Maven'
+   }
+   stages.each { element -> stage(element.key){
+            dir("/workspace/redhat/bsig-dev/${element.key}"){
+                compile(element.value, mvnHome);
+            }
+        }
+    }
+}
